@@ -1,5 +1,4 @@
 import os
-import json
 
 class FileManager:
     def __init__(self, filename):
@@ -9,15 +8,22 @@ class FileManager:
     def _load_file(self):
         if os.path.exists(self.filename):
             with open(self.filename, 'r', encoding='utf-8') as file:
-                try:
-                    return json.load(file)
-                except json.JSONDecodeError:
-                    pass
+                lines = file.readlines()
+                data = {}
+                for line in lines:
+                    if line.strip():
+                        name, price = line.strip().split(" — ")
+                        data[name.lower()] = int(price)  
+                return data
         return {}
 
     def _save_file(self):
+        if os.path.dirname(self.filename):
+            os.makedirs(os.path.dirname(self.filename), exist_ok=True)
+
         with open(self.filename, 'w', encoding='utf-8') as file:
-            json.dump(self.data, file, ensure_ascii=False, indent=4)
+            for name, price in self.data.items():
+                file.write(f"{name} — {price}\n")
 
     def handle_action(self, action, name=None, price=None, new_name=None):
         name = name.lower() if name else None
@@ -66,7 +72,7 @@ class FileManager:
             print("Invalid action.")
 
 def main():
-    filename = "items.json" 
+    filename = "items.txt" 
     manager = FileManager(filename)
 
     while True:
